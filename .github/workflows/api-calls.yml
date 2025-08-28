@@ -1,8 +1,23 @@
-name: API Calls to FastAPI
+name: API Calls to FastAPI - Híbrido
 
 on:
   workflow_dispatch:
     inputs:
+      # Lista de endpoints separados por coma (opcional)
+      endpoint_list:
+        description: "Lista de endpoints separados por coma (ej: /api/horario,/api/home)"
+        required: false
+        default: ""
+        type: string
+
+      # Endpoint único (opcional, sobrescribe choice si no hay lista)
+      endpoint_custom:
+        description: "Endpoint único (ej: /api/one-piece/3)"
+        required: false
+        default: ""
+        type: string
+
+      # Endpoint común (solo se usa si no hay lista ni custom)
       endpoint_choice:
         description: "Selecciona un endpoint común"
         required: false
@@ -13,34 +28,106 @@ on:
           - /api/animes
           - /api/home
           - /api/filters
-      endpoint_custom:
-        description: "Escribe manualmente un endpoint (ej: /api/one-piece/3)"
+
+      # Filtros para /api/animes
+      genre:
+        description: "Géneros separados por coma (ej: accion,drama)"
         required: false
         default: ""
+        type: string
+      category:
+        description: "Categorías separadas por coma (ej: shonen,shojo)"
+        required: false
+        default: ""
+        type: string
+      min_year:
+        description: "Año mínimo"
+        required: false
+        default: ""
+        type: string
+      max_year:
+        description: "Año máximo"
+        required: false
+        default: ""
+        type: string
+      status:
+        description: "Estado del anime (ej: emision, finalizado)"
+        required: false
+        default: ""
+        type: string
+      order:
+        description: "Orden (ej: predeterminado, alfabetico)"
+        required: false
+        default: "predeterminado"
+        type: string
+      letter:
+        description: "Letra inicial"
+        required: false
+        default: ""
+        type: string
+      page:
+        description: "Número de página"
+        required: false
+        default: "1"
         type: string
 
 jobs:
   call-api:
     runs-on: ubuntu-latest
     steps:
-      - name: Determinar endpoint final
-        id: set-endpoint
+      - name: Determinar endpoints a ejecutar
+        id: set-endpoints
         run: |
-          if [ -n "${{ github.event.inputs.endpoint_custom }}" ]; then
-            echo "endpoint=${{ github.event.inputs.endpoint_custom }}" >> $GITHUB_OUTPUT
+          if [ -n "${{ github.event.inputs.endpoint_list }}" ]; then
+            echo "endpoints=${{ github.event.inputs.endpoint_list }}" >> $GITHUB_OUTPUT
+          elif [ -n "${{ github.event.inputs.endpoint_custom }}" ]; then
+            echo "endpoints=${{ github.event.inputs.endpoint_custom }}" >> $GITHUB_OUTPUT
           else
-            echo "endpoint=${{ github.event.inputs.endpoint_choice }}" >> $GITHUB_OUTPUT
-          fi
+            echo "endpoints=${{ github.event.inputs.endpoint_choice }}" >> $GITHUB_OUTPUT
 
-      - name: Llamar al endpoint seleccionado
+      - name: Ejecutar endpoints
         run: |
           BASE_URL="https://e6f4992833b0.ngrok-free.app"
-          ENDPOINT="${{ steps.set-endpoint.outputs.endpoint }}"
-          echo "🔗 Llamando a: $BASE_URL$ENDPOINT"
-          curl -s "$BASE_URL$ENDPOINT" -H "accept: application/json" -o response.json || echo "{}" > response.json
+          IFS=',' read -ra ENDPOINTS <<< "${{ steps.set-endpoints.outputs.endpoints }}"
 
-      - name: Subir respuesta como artifact
+          mkdir responses
+
+          for ep in "${ENDPOINTS[@]}"; do
+            ep_trimmed=$(echo "$ep" | xargs)
+            
+            # Si es /api/animes, agregar filtros dinámicos
+            if [[ "$ep_trimmed" == "/api/animes" ]]; then
+              QUERY="?"
+              if [ -n "${{ github.event.inputs.genre }}" ]; then
+                IFS=',' read -ra GENRES <<< "${{ github.event.inputs.genre }}"
+                for g in "${GENRES[@]}"; do QUERY="${QUERY}genre=${g}&"; done
+              fi
+              if [ -n "${{ github.event.inputs.category }}" ]; then
+                IFS=',' read -ra CATEGORIES <<< "${{ github.event.inputs.category }}"
+                for c in "${CATEGORIES[@]}"; do QUERY="${QUERY}category=${c}&"; done
+              fi
+              for param in min_year max_year status order letter page; do
+                val="${{ github.event.inputs.$param }}"
+                if [ -n "$val" ]; then
+                  QUERY="${QUERY}${param}=${val}&"
+                fi
+              done
+              QUERY="${QUERY%&}"
+              FULL_URL="$BASE_URL$ep_trimmed$QUERY"
+            else
+              FULL_URL="$BASE_URL$ep_trimmed"
+            fi
+
+            outfile="responses$(echo $ep_trimmed | tr '/' '_' | tr -s '_').json"
+            echo "🔗 Llamando a: $FULL_URL"
+            curl -s "$FULL_URL" -H "accept: application/json" -o "$outfile" || echo "{}" > "$outfile"
+
+            echo "📄 Respuesta de $ep_trimmed:"
+            cat "$outfile" | jq '.' || cat "$outfile"
+          done
+
+      - name: Subir todas las respuestas como artifact
         uses: actions/upload-artifact@v4
         with:
-          name: api-response
-          path: response.json
+          name: api-responses
+          path: responses/
