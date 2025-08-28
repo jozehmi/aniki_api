@@ -29,46 +29,11 @@ on:
           - /api/home
           - /api/filters
 
-      # Filtros para /api/animes
-      genre:
-        description: "Géneros separados por coma (ej: accion,drama)"
+      # Filtros combinados para /api/animes (opcional)
+      animes_filters:
+        description: "Filtros para /api/animes en formato clave=valor separados por ; (ej: genre=accion,drama;category=shonen;min_year=2000;page=2)"
         required: false
         default: ""
-        type: string
-      category:
-        description: "Categorías separadas por coma (ej: shonen,shojo)"
-        required: false
-        default: ""
-        type: string
-      min_year:
-        description: "Año mínimo"
-        required: false
-        default: ""
-        type: string
-      max_year:
-        description: "Año máximo"
-        required: false
-        default: ""
-        type: string
-      status:
-        description: "Estado del anime (ej: emision, finalizado)"
-        required: false
-        default: ""
-        type: string
-      order:
-        description: "Orden (ej: predeterminado, alfabetico)"
-        required: false
-        default: "predeterminado"
-        type: string
-      letter:
-        description: "Letra inicial"
-        required: false
-        default: ""
-        type: string
-      page:
-        description: "Número de página"
-        required: false
-        default: "1"
         type: string
 
 jobs:
@@ -94,35 +59,56 @@ jobs:
 
           mkdir -p responses
 
-          # Asignar valores de inputs a variables de Bash
-          MIN_YEAR="${{ github.event.inputs.min_year }}"
-          MAX_YEAR="${{ github.event.inputs.max_year }}"
-          STATUS="${{ github.event.inputs.status }}"
-          ORDER="${{ github.event.inputs.order }}"
-          LETTER="${{ github.event.inputs.letter }}"
-          PAGE="${{ github.event.inputs.page }}"
-
           for ep in "${ENDPOINTS[@]}"; do
             ep_trimmed=$(echo "$ep" | xargs)
             
             # Si es /api/animes, agregar filtros dinámicos
             if [[ "$ep_trimmed" == "/api/animes" ]]; then
               QUERY="?"
-              if [ -n "${{ github.event.inputs.genre }}" ]; then
-                IFS=',' read -ra GENRES <<< "${{ github.event.inputs.genre }}"
+              
+              # Parsear animes_filters
+              ANIMES_FILTERS="${{ github.event.inputs.animes_filters }}"
+              declare -A filters
+              if [ -n "$ANIMES_FILTERS" ]; then
+                IFS=';' read -ra FILTER_PAIRS <<< "$ANIMES_FILTERS"
+                for pair in "${FILTER_PAIRS[@]}"; do
+                  key=$(echo "$pair" | cut -d'=' -f1 | xargs)
+                  value=$(echo "$pair" | cut -d'=' -f2- | xargs)
+                  filters["$key"]="$value"
+                done
+              fi
+              
+              # Agregar genre si existe
+              if [ -n "${filters[genre]}" ]; then
+                IFS=',' read -ra GENRES <<< "${filters[genre]}"
                 for g in "${GENRES[@]}"; do QUERY="${QUERY}genre=${g}&"; done
               fi
-              if [ -n "${{ github.event.inputs.category }}" ]; then
-                IFS=',' read -ra CATEGORIES <<< "${{ github.event.inputs.category }}"
+              
+              # Agregar category si existe
+              if [ -n "${filters[category]}" ]; then
+                IFS=',' read -ra CATEGORIES <<< "${filters[category]}"
                 for c in "${CATEGORIES[@]}"; do QUERY="${QUERY}category=${c}&"; done
               fi
-              # Agregar parámetros dinámicos usando variables de Bash
-              [ -n "$MIN_YEAR" ] && QUERY="${QUERY}min_year=${MIN_YEAR}&"
-              [ -n "$MAX_YEAR" ] && QUERY="${QUERY}max_year=${MAX_YEAR}&"
-              [ -n "$STATUS" ] && QUERY="${QUERY}status=${STATUS}&"
-              [ -n "$ORDER" ] && QUERY="${QUERY}order=${ORDER}&"
-              [ -n "$LETTER" ] && QUERY="${QUERY}letter=${LETTER}&"
-              [ -n "$PAGE" ] && QUERY="${QUERY}page=${PAGE}&"
+              
+              # Agregar otros parámetros con defaults si no se proporcionan
+              min_year="${filters[min_year]:-}"
+              [ -n "$min_year" ] && QUERY="${QUERY}min_year=${min_year}&"
+              
+              max_year="${filters[max_year]:-}"
+              [ -n "$max_year" ] && QUERY="${QUERY}max_year=${max_year}&"
+              
+              status="${filters[status]:-}"
+              [ -n "$status" ] && QUERY="${QUERY}status=${status}&"
+              
+              order="${filters[order]:-predeterminado}"
+              [ -n "$order" ] && QUERY="${QUERY}order=${order}&"
+              
+              letter="${filters[letter]:-}"
+              [ -n "$letter" ] && QUERY="${QUERY}letter=${letter}&"
+              
+              page="${filters[page]:-1}"
+              [ -n "$page" ] && QUERY="${QUERY}page=${page}&"
+              
               QUERY="${QUERY%&}"
               FULL_URL="$BASE_URL$ep_trimmed$QUERY"
             else
