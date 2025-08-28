@@ -94,6 +94,14 @@ jobs:
 
           mkdir -p responses
 
+          # Asignar valores de inputs a variables de Bash
+          MIN_YEAR="${{ github.event.inputs.min_year }}"
+          MAX_YEAR="${{ github.event.inputs.max_year }}"
+          STATUS="${{ github.event.inputs.status }}"
+          ORDER="${{ github.event.inputs.order }}"
+          LETTER="${{ github.event.inputs.letter }}"
+          PAGE="${{ github.event.inputs.page }}"
+
           for ep in "${ENDPOINTS[@]}"; do
             ep_trimmed=$(echo "$ep" | xargs)
             
@@ -108,13 +116,13 @@ jobs:
                 IFS=',' read -ra CATEGORIES <<< "${{ github.event.inputs.category }}"
                 for c in "${CATEGORIES[@]}"; do QUERY="${QUERY}category=${c}&"; done
               fi
-              for param in min_year max_year status order letter page; do
-                # Usar eval para obtener el valor del input dinámicamente
-                val=$(eval echo "\${{ github.event.inputs.$param }}")
-                if [ -n "$val" ]; then
-                  QUERY="${QUERY}${param}=${val}&"
-                fi
-              done
+              # Agregar parámetros dinámicos usando variables de Bash
+              [ -n "$MIN_YEAR" ] && QUERY="${QUERY}min_year=${MIN_YEAR}&"
+              [ -n "$MAX_YEAR" ] && QUERY="${QUERY}max_year=${MAX_YEAR}&"
+              [ -n "$STATUS" ] && QUERY="${QUERY}status=${STATUS}&"
+              [ -n "$ORDER" ] && QUERY="${QUERY}order=${ORDER}&"
+              [ -n "$LETTER" ] && QUERY="${QUERY}letter=${LETTER}&"
+              [ -n "$PAGE" ] && QUERY="${QUERY}page=${PAGE}&"
               QUERY="${QUERY%&}"
               FULL_URL="$BASE_URL$ep_trimmed$QUERY"
             else
