@@ -12,7 +12,8 @@ load_dotenv()
 
 # Obtener la URL de la base de datos desde las variables de entorno
 # El valor por defecto es solo un placeholder; la contraseña debe estar en .env
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres.azawidatatlmzzpbhrrdjv:[YOUR-PASSWORD]@aws-1-us-east-2.pooler.supabase.com:5432/postgres")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres.azawidatlmzzpbhrrdjv:[YOUR-PASSWORD]@aws-1-us-east-2.pooler.supabase.com:6543/postgres")
+print(f"URL utilizada: {DATABASE_URL}")
 ENGINE = create_engine(DATABASE_URL, echo=True)  # echo=True para logs de debug
 Base = declarative_base()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
