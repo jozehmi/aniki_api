@@ -1,6 +1,8 @@
 # save_functions.py - Funciones para guardar datos en la base de datos
 from database import FilterOption, SessionLocal, Category, Genre, Tag, Media, MediaGenre, MediaTag, Episode, Embed, Download, MediaStatus, get_db
 from datetime import datetime
+from sqlalchemy.orm import Session
+import re
 
 # Función para inicializar filtros
 def initialize_filters():
@@ -330,6 +332,12 @@ def save_anime_episode(data: dict):
     finally:
         db.close()
 
+# Función auxiliar para generar un slug
+def generate_slug(name: str) -> str:
+    """Convierte un nombre en un slug (minúsculas, sin espacios, solo caracteres alfanuméricos y guiones)."""
+    slug = re.sub(r'[^a-zA-Z0-9\s-]', '', name.lower()).replace(' ', '-')
+    return slug or 'default-slug'  # Fallback si el nombre está vacío
+
 # Función para guardar Anime Schedule
 def save_anime_schedule(data: dict):
     db = next(get_db())
@@ -339,7 +347,9 @@ def save_anime_schedule(data: dict):
             if cat_data:
                 category = db.query(Category).filter(Category.id == cat_data["id"]).first()
                 if not category:
-                    category = Category(id=cat_data["id"], name=cat_data["name"])
+                    # Usar slug de cat_data si existe, o generar uno
+                    slug = cat_data.get("slug") or generate_slug(cat_data["name"])
+                    category = Category(id=cat_data["id"], name=cat_data["name"], slug=slug)
                     db.add(category)
                     db.commit()
 
@@ -369,6 +379,7 @@ def save_anime_schedule(data: dict):
                     db.commit()
     except Exception as e:
         db.rollback()
-        print(f"Error: {e}")
+        print(f"Error al guardar en la base de datos: {e}")
+        raise  # Relanzar para depuración; quitar en producción si prefieres
     finally:
         db.close()

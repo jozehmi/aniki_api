@@ -8,6 +8,7 @@ import asyncio, re, json
 from core.cache import get_cached, set_cache
 from core.config import BASE_URL
 from utils.scraping import fetch_html
+from save_functions import save_anime_schedule
 
 router = APIRouter()
 
@@ -91,6 +92,12 @@ async def get_horario(force_refresh: bool = Query(False)):
             item.update(slug_to_data[slug])
         else:
             item.update({"day": None, "time": None, "poster": None})
+
+# Guardar los datos en la base de datos
+    try:
+        save_anime_schedule({"schedule": media})
+    except Exception as e:
+        print(f"Error al guardar en la base de datos: {e}")
 
     set_cache("horario", media)
     return {"schedule": media}

@@ -146,6 +146,14 @@ class FilterOption(Base):
 # Crear tablas al importar el módulo
 Base.metadata.create_all(bind=ENGINE)
 
+# database.py (añadir al final del archivo)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
 # Bloque para ejecución directa
 if __name__ == "__main__":
     try:
