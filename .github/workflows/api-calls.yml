@@ -109,7 +109,8 @@ jobs:
                 for c in "${CATEGORIES[@]}"; do QUERY="${QUERY}category=${c}&"; done
               fi
               for param in min_year max_year status order letter page; do
-                val="${{ github.event.inputs.$param }}"
+                # Usar eval para obtener el valor del input dinámicamente
+                val=$(eval echo "\${{ github.event.inputs.$param }}")
                 if [ -n "$val" ]; then
                   QUERY="${QUERY}${param}=${val}&"
                 fi
