@@ -26,7 +26,7 @@ on:
         options:
           - /api/horario
           - /api/animes
-          - /api/home
+          - /api/animes/home
           - /api/filters
 
       # Filtros combinados para /api/animes (opcional)
