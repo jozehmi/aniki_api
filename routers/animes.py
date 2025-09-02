@@ -10,13 +10,14 @@ from utils.builders import (
 )
 from core.cache import get_cached, set_cache
 from core.config import BASE_URL, VALID_CATEGORIES, VALID_GENRES, VALID_STATUS, VALID_ORDERS, VALID_LETTERS
-from save_functions import save_anime_home,save_anime_catalog
+from save_functions import save_anime_home,save_anime_catalog,save_anime_details
 
 router = APIRouter()
 
 # -------------------- /animes --------------------
 @router.get("")
 def get_animes(
+    search: str = None,                # <-- Añadido
     category: list[str] = Query(None),
     genre: list[str] = Query(None),
     min_year: int = None,
@@ -38,9 +39,10 @@ def get_animes(
         raise HTTPException(status_code=400, detail=f"Letter inválida. Opciones: {VALID_LETTERS}")
     if min_year and max_year and min_year > max_year:
         raise HTTPException(status_code=400, detail="min_year no puede ser mayor que max_year")
-
     base_url = f"{BASE_URL}/catalogo"
     params = []
+    if search:                        # <-- Añadido
+        params.append(f"search={search}")
     if category:
         for cat in category:
             params.append(f"category={cat}")
@@ -58,28 +60,22 @@ def get_animes(
     if letter:
         params.append(f"letter={letter.upper()}")
     params.append(f"page={page}")
-
     url = base_url + "?" + "&".join(params) if params else base_url
     response = requests.get(url)
     if response.status_code != 200:
         return {"error": "Failed to fetch the page", "url": url}
-
     soup = BeautifulSoup(response.text, "html.parser")
-
     scripts = soup.find_all("script")
     data_script = None
     for script in scripts:
         if script.string and "__sveltekit_" in script.string:
             data_script = script.string
             break
-
     if not data_script:
         return {"error": "Data script not found", "url": url}
-
     results_match = re.search(r"results:\s*\[([\s\S]*?)\]\s*}", data_script)
     if not results_match:
         return {"error": "Results not found in script", "url": url}
-
     results_str = results_match.group(1)
     anime_strs = re.split(r"\}\s*,\s*\{", results_str)
     animes = []
@@ -88,13 +84,11 @@ def get_animes(
             anime_str = "{" + anime_str
         if i < len(anime_strs) - 1:
             anime_str += "}"
-
         id_match = re.search(r'id:"([^"]+)"', anime_str)
         title_match = re.search(r'title:"([^"]+)"', anime_str)
         synopsis_match = re.search(r'synopsis:"(.*?)"(?=\s*,\s*categoryId:)', anime_str, re.DOTALL)
         category_id_match = re.search(r'categoryId:(\d+)', anime_str)
         slug_match = re.search(r'slug:"([^"]+)"', anime_str)
-
         anime_dict = {}
         if id_match:
             anime_id = id_match.group(1)
@@ -103,51 +97,43 @@ def get_animes(
         if title_match:
             anime_dict["title"] = title_match.group(1)
         if synopsis_match:
-            anime_dict["synopsis"] = synopsis_match.group(1).replace("\\n", "\n")
+            anime_dict["synopsis"] = synopsis_match.group(1).replace("\n", "\n")
         if category_id_match:
             anime_dict["categoryId"] = int(category_id_match.group(1))
         if slug_match:
             anime_dict["slug"] = slug_match.group(1)
-
         # Fix category slug to use the correct slug from input or VALID_CATEGORIES
         category_match = re.search(r'a\.name="([^"]+)"', data_script)
         category_name = category_match.group(1) if category_match else "Unknown"
         category_slug = "tv-anime"  # Default
         if category and len(category) == 1:
-            category_slug = category[0]  # Use the queried category slug
+            category_slug = category[0]
         elif anime_dict.get("categoryId"):
-            # Map categoryId to slug (assuming a mapping exists)
             category_map = {
                 1: "tv-anime",
                 2: "pelicula",
                 3: "ova",
                 4: "especial"
-            }  # Adjust based on your actual mapping
+            }
             category_slug = category_map.get(anime_dict["categoryId"], "tv-anime")
-        
         anime_dict["category"] = {
             "id": anime_dict.get("categoryId"),
             "name": category_name,
             "slug": category_slug
         }
-
         if anime_dict:
             animes.append(anime_dict)
-
     total_results = len(animes)
     results_elem = soup.find(string=re.compile(r"\d+ Resultados"))
     if results_elem:
         match = re.search(r"\d+", results_elem)
         if match:
             total_results = int(match.group())
-
     total_pages = 1
     pagination_links = soup.find_all("a", href=lambda href: href and "page=" in href if href else False)
     pages = [int(plink.text) for plink in pagination_links if plink.text.isdigit()]
     if pages:
         total_pages = max(pages)
-
-    # Save the anime data to the database
     result = {
         "url": url,
         "page": page,
@@ -156,7 +142,6 @@ def get_animes(
         "animes": animes,
     }
     save_anime_catalog(result)
-
     return result
 
 # -------------------- /home --------------------
@@ -279,6 +264,12 @@ async def get_anime_details(slug: str, force_refresh: bool = Query(False)):
         "backdrop": build_backdrop_url(anime_id),
         "episodes": episodes
     })
+    # Validar y guardar los datos
+    try:
+        save_anime_details(media_data)
+    except Exception as e:
+        print(f"Error al guardar en la base de datos: {e}, datos problemáticos: {media_data}")
+        raise
 
     set_cache(slug, media_data)
     return media_data

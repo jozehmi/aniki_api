@@ -239,6 +239,11 @@ def save_anime_catalog(data: dict):
 
 # Función para guardar Anime Details
 def save_anime_details(data: dict):
+    status_map = {
+        1: "emision",
+        2: "finalizado",
+        3: "proximamente"
+    }
     db = next(get_db())
     try:
         cat_data = data.get("category")
@@ -247,84 +252,92 @@ def save_anime_details(data: dict):
             if not category:
                 category = Category(id=cat_data["id"], name=cat_data["name"], slug=cat_data.get("slug"))
                 db.add(category)
-                db.commit()
 
         start_date = datetime.strptime(data["startDate"], "%Y-%m-%d").date() if data.get("startDate") else None
         end_date = datetime.strptime(data["endDate"], "%Y-%m-%d").date() if data.get("endDate") else None
         next_date = datetime.strptime(data["nextDate"], "%Y-%m-%d").date() if data.get("nextDate") else None
         created_at = datetime.fromisoformat(data["createdAt"].replace("+00", "Z"))
         updated_at = datetime.fromisoformat(data["updatedAt"].replace("+00", "Z"))
+
+        status_val = data.get("status")
+        status_str = None
+        if status_val is not None:
+            if isinstance(status_val, int):
+                status_str = status_map.get(status_val)
+            elif isinstance(status_val, str):
+                status_str = status_val
+        status_enum = MediaStatus(status_str) if status_str else None
+
         media = db.query(Media).filter(Media.id == data["id"]).first()
         if not media:
             media = Media(
-                id=data["id"], slug=data["slug"], title=data["title"], aka=data["aka"], synopsis=data["synopsis"],
-                start_date=start_date, end_date=end_date, next_date=next_date, wait_days=data["waitDays"],
-                status=MediaStatus(data["status"]) if data.get("status") else None, runtime=data["runtime"],
-                featured=data["featured"], mature=data["mature"], episodes_count=data["episodesCount"],
-                score=data["score"], votes=data["votes"], mal_id=data["malId"], seasons=data["seasons"],
-                backdrop=data["backdrop"], trailer=data["trailer"], poster=data["poster"], created_at=created_at,
-                updated_at=updated_at, type="anime", category_id=data["categoryId"]
+                id=data["id"], slug=data["slug"], title=data["title"], aka=data.get("aka"), synopsis=data.get("synopsis"),
+                start_date=start_date, end_date=end_date, next_date=next_date, wait_days=data.get("waitDays"),
+                status=status_enum, runtime=data.get("runtime"), featured=data.get("featured"), mature=data.get("mature"),
+                episodes_count=data.get("episodesCount"), score=data.get("score"), votes=data.get("votes"),
+                mal_id=data.get("malId"), seasons=data.get("seasons"), backdrop=data.get("backdrop"),
+                trailer=data.get("trailer"), poster=data.get("poster"), created_at=created_at, updated_at=updated_at,
+                type="anime", category_id=data.get("categoryId")
             )
             db.add(media)
-            db.commit()
         else:
-            media.aka = data["aka"] or media.aka
-            media.synopsis = data["synopsis"] or media.synopsis
+            media.aka = data.get("aka", media.aka)
+            media.synopsis = data.get("synopsis", media.synopsis)
             media.start_date = start_date or media.start_date
             media.end_date = end_date or media.end_date
             media.next_date = next_date or media.next_date
-            media.wait_days = data["waitDays"] or media.wait_days
-            media.status = MediaStatus(data["status"]) if data.get("status") else media.status
-            media.runtime = data["runtime"] or media.runtime
-            media.featured = data["featured"] or media.featured
-            media.mature = data["mature"] or media.mature
-            media.episodes_count = data["episodesCount"] or media.episodes_count
-            media.score = data["score"] or media.score
-            media.votes = data["votes"] or media.votes
-            media.mal_id = data["malId"] or media.mal_id
-            media.seasons = data["seasons"] or media.seasons
-            media.backdrop = data["backdrop"] or media.backdrop
-            media.trailer = data["trailer"] or media.trailer
-            media.poster = data["poster"] or media.poster
+            media.wait_days = data.get("waitDays", media.wait_days)
+            media.status = status_enum or media.status
+            media.runtime = data.get("runtime", media.runtime)
+            media.featured = data.get("featured", media.featured)
+            media.mature = data.get("mature", media.mature)
+            media.episodes_count = data.get("episodesCount", media.episodes_count)
+            media.score = data.get("score", media.score)
+            media.votes = data.get("votes", media.votes)
+            media.mal_id = data.get("malId", media.mal_id)
+            media.seasons = data.get("seasons", media.seasons)
+            media.backdrop = data.get("backdrop", media.backdrop)
+            media.trailer = data.get("trailer", media.trailer)
+            media.poster = data.get("poster", media.poster)
             media.created_at = created_at or media.created_at
             media.updated_at = updated_at or media.updated_at
-            db.commit()
 
+        # Procesar géneros
         for g in data.get("genres", []):
             genre = db.query(Genre).filter(Genre.id == g["id"]).first()
             if not genre:
                 genre = Genre(id=g["id"], name=g["name"], slug=g["slug"])
                 db.add(genre)
-                db.commit()
             assoc = db.query(MediaGenre).filter(MediaGenre.media_id == media.id, MediaGenre.genre_id == genre.id).first()
             if not assoc:
                 assoc = MediaGenre(media_id=media.id, genre_id=genre.id)
                 db.add(assoc)
-                db.commit()
 
+        # Procesar tags
         for tag_id in data.get("tags", []):
             tag = db.query(Tag).filter(Tag.id == tag_id).first()
             if not tag:
                 tag = Tag(id=tag_id)
                 db.add(tag)
-                db.commit()
             assoc = db.query(MediaTag).filter(MediaTag.media_id == media.id, MediaTag.tag_id == tag.id).first()
             if not assoc:
                 assoc = MediaTag(media_id=media.id, tag_id=tag.id)
                 db.add(assoc)
-                db.commit()
 
+        # Procesar episodios
         for ep in data.get("episodes", []):
             episode = db.query(Episode).filter(Episode.media_id == media.id, Episode.number == ep["number"]).first()
             if not episode:
-                episode = Episode(media_id=media.id, number=ep["number"], image_url=ep["image"], watch_url=ep["url"])
+                episode = Episode(media_id=media.id, number=ep["number"], image_url=ep.get("image"), watch_url=ep.get("url"))
                 db.add(episode)
-                db.commit()
+
+        db.commit()
     except Exception as e:
         db.rollback()
         print(f"Error: {e}")
     finally:
         db.close()
+
 
 # Función para guardar Anime Episode
 def save_anime_episode(data: dict):
