@@ -10,7 +10,7 @@ from utils.builders import (
 )
 from core.cache import get_cached, set_cache
 from core.config import BASE_URL, VALID_CATEGORIES, VALID_GENRES, VALID_STATUS, VALID_ORDERS, VALID_LETTERS
-from save_functions import save_anime_home
+from save_functions import save_anime_home,save_anime_catalog
 
 router = APIRouter()
 
@@ -109,12 +109,26 @@ def get_animes(
         if slug_match:
             anime_dict["slug"] = slug_match.group(1)
 
+        # Fix category slug to use the correct slug from input or VALID_CATEGORIES
         category_match = re.search(r'a\.name="([^"]+)"', data_script)
         category_name = category_match.group(1) if category_match else "Unknown"
+        category_slug = "tv-anime"  # Default
+        if category and len(category) == 1:
+            category_slug = category[0]  # Use the queried category slug
+        elif anime_dict.get("categoryId"):
+            # Map categoryId to slug (assuming a mapping exists)
+            category_map = {
+                1: "tv-anime",
+                2: "pelicula",
+                3: "ova",
+                4: "especial"
+            }  # Adjust based on your actual mapping
+            category_slug = category_map.get(anime_dict["categoryId"], "tv-anime")
+        
         anime_dict["category"] = {
             "id": anime_dict.get("categoryId"),
             "name": category_name,
-            "slug": "tv-anime"
+            "slug": category_slug
         }
 
         if anime_dict:
@@ -132,13 +146,18 @@ def get_animes(
     pages = [int(plink.text) for plink in pagination_links if plink.text.isdigit()]
     if pages:
         total_pages = max(pages)
-    return {
+
+    # Save the anime data to the database
+    result = {
         "url": url,
         "page": page,
         "total_results": total_results,
         "total_pages": total_pages,
         "animes": animes,
     }
+    save_anime_catalog(result)
+
+    return result
 
 # -------------------- /home --------------------
 def validate_home_data(data):
