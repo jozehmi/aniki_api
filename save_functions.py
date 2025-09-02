@@ -1,154 +1,208 @@
 # save_functions.py - Funciones para guardar datos en la base de datos
 from database import FilterOption, SessionLocal, Category, Genre, Tag, Media, MediaGenre, MediaTag, Episode, Embed, Download, MediaStatus, get_db
 from datetime import datetime
+from dateutil import parser
+from slugify import slugify
 from sqlalchemy.orm import Session
 import re
 
 # Función para inicializar filtros
-def initialize_filters():
-    db = next(get_db())
+def save_filters(filters_data: dict, db: Session):
+    """
+    Guarda las opciones de filtros en la tabla filter_options.
+    
+    Args:
+        filters_data (dict): Diccionario con los filtros y sus opciones.
+        db (Session): Sesión de la base de datos.
+    """
     try:
-        # Cargar categorías
-        categories = [
-            {"name": "TV Anime", "slug": "tv-anime"},
-            {"name": "Pelicula", "slug": "pelicula"},
-            {"name": "OVA", "slug": "ova"},
-            {"name": "Especial", "slug": "especial"}
-        ]
-        for cat in categories:
-            if not db.query(Category).filter(Category.slug == cat["slug"]).first():
-                db.add(Category(**cat))
-        db.commit()
-
-        # Cargar géneros
-        genres = [
-            {"name": "Acción", "slug": "accion"},
-            {"name": "Aventura", "slug": "aventura"},
-            {"name": "Ciencia ficción", "slug": "ciencia-ficcion"},
-            {"name": "Comedia", "slug": "comedia"},
-            {"name": "Deportes", "slug": "deportes"},
-            {"name": "Drama", "slug": "drama"},
-            {"name": "Fantasía", "slug": "fantasia"},
-            {"name": "Misterio", "slug": "misterio"},
-            {"name": "Recuentos de la vida", "slug": "recuentos-de-la-vida"},
-            {"name": "Romance", "slug": "romance"},
-            {"name": "Seinen", "slug": "seinen"},
-            {"name": "Shoujo", "slug": "shoujo"},
-            {"name": "Shounen", "slug": "shounen"},
-            {"name": "Sobrenatural", "slug": "sobrenatural"},
-            {"name": "Suspenso", "slug": "suspenso"},
-            {"name": "Terror", "slug": "terror"}
-        ]
-        for g in genres:
-            if not db.query(Genre).filter(Genre.slug == g["slug"]).first():
-                db.add(Genre(**g))
-        db.commit()
-
-        # Cargar opciones de filtros (opcional)
-        filter_data = [
-            {"filter_type": "Category", "value": "tv-anime", "is_multiple": True},
-            {"filter_type": "Category", "value": "pelicula", "is_multiple": True},
-            {"filter_type": "Category", "value": "ova", "is_multiple": True},
-            {"filter_type": "Category", "value": "especial", "is_multiple": True},
-            *[{"filter_type": "Genre", "value": g["slug"], "is_multiple": True} for g in genres],
-            {"filter_type": "Status", "value": "emision", "is_multiple": False},
-            {"filter_type": "Status", "value": "finalizado", "is_multiple": False},
-            {"filter_type": "Status", "value": "proximamente", "is_multiple": False},
-            {"filter_type": "Order", "value": "predeterminado", "is_multiple": False},
-            {"filter_type": "Order", "value": "popular", "is_multiple": False},
-            {"filter_type": "Order", "value": "score", "is_multiple": False},
-            {"filter_type": "Order", "value": "title", "is_multiple": False},
-            {"filter_type": "Order", "value": "latest_added", "is_multiple": False},
-            {"filter_type": "Order", "value": "latest_released", "is_multiple": False},
-            *[{"filter_type": "Letter", "value": l, "is_multiple": False} for l in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
-        ]
-        for f in filter_data:
-            if not db.query(FilterOption).filter(FilterOption.filter_type == f["filter_type"], FilterOption.value == f["value"]).first():
-                db.add(FilterOption(**f))
-        db.commit()
+        for filter_type, filter_info in filters_data.items():
+            is_multiple = filter_info.get("type") == "multiple"
+            if "options" in filter_info:
+                for value in filter_info["options"]:
+                    try:
+                        option = FilterOption(
+                            filter_type=filter_type,
+                            value=value,
+                            is_multiple=is_multiple,
+                            added_at=datetime.utcnow()
+                        )
+                        db.add(option)
+                        db.commit()
+                        print(f"Guardando filtro {filter_type}: {value}")
+                    except IntegrityError:
+                        db.rollback()
+                        print(f"Filtro {filter_type}: {value} ya existe")
+                    except Exception as e:
+                        db.rollback()
+                        print(f"Error al guardar filtro {filter_type}: {value}: {e}")
+            else:
+                print(f"Filtro {filter_type} no tiene opciones para guardar")
+        print("Todos los filtros procesados y guardados correctamente.")
     except Exception as e:
         db.rollback()
-        print(f"Error: {e}")
-    finally:
-        db.close()
+        print(f"Error general al guardar filtros: {e}")
 
 # Función para guardar Anime Home
 def save_anime_home(data: dict):
     db = next(get_db())
+    status_map = {
+        0: MediaStatus.PROXIMAMENTE,
+        1: MediaStatus.FINALIZADO,
+        2: MediaStatus.EMISION
+    }
     try:
+        print("Procesando featured...")
         for item in data.get("featured", []):
-            cat_data = item.get("category")
-            if cat_data:
-                category = db.query(Category).filter(Category.id == cat_data["id"]).first()
-                if not category:
-                    category = Category(id=cat_data["id"], name=cat_data["name"], slug=cat_data.get("slug", str(cat_data["id"])))
-                    db.add(category)
+            try:
+                print(f"Procesando media {item['id']}: {item['title']}")
+                cat_data = item.get("category")
+                if cat_data:
+                    category = db.query(Category).filter(Category.id == cat_data["id"]).first()
+                    if not category:
+                        print(f"Creando categoría {cat_data['id']}: {cat_data['name']}")
+                        category = Category(
+                            id=cat_data["id"],
+                            name=cat_data["name"],
+                            slug=cat_data.get("slug", slugify(cat_data["name"])),  # Generar slug si no se proporciona
+                            added_at=datetime.utcnow()
+                        )
+                        db.add(category)
+                        db.commit()
+
+                start_date = datetime.strptime(item["startDate"], "%Y-%m-%d").date() if item.get("startDate") else None
+                media = db.query(Media).filter(Media.id == item["id"]).first()
+                if not media:
+                    print(f"Creando media {item['id']}: {item['title']}")
+                    media = Media(
+                        id=item["id"],
+                        slug=item["slug"],
+                        title=item["title"],
+                        synopsis=item["synopsis"],
+                        start_date=start_date,
+                        status=status_map.get(item["status"]) if item.get("status") is not None else None,
+                        image_url=item["image_url"],
+                        watch_url=item["watch_url"],
+                        type="anime",
+                        category_id=cat_data["id"] if cat_data else None,
+                        added_at=datetime.utcnow()
+                    )
+                    db.add(media)
                     db.commit()
 
-            start_date = datetime.strptime(item["startDate"], "%Y-%m-%d").date() if item.get("startDate") else None
-            media = db.query(Media).filter(Media.id == item["id"]).first()
-            if not media:
-                media = Media(
-                    id=item["id"], slug=item["slug"], title=item["title"], synopsis=item["synopsis"],
-                    start_date=start_date, status=MediaStatus(item["status"]) if item.get("status") else None,
-                    image_url=item["image_url"], watch_url=item["watch_url"], type="anime",
-                    category_id=cat_data["id"] if cat_data else None
-                )
-                db.add(media)
-                db.commit()
+                for g in item.get("genres", []):
+                    genre = db.query(Genre).filter(Genre.id == g["id"]).first()
+                    if not genre:
+                        print(f"Creando género {g['id']}: {g['name']}")
+                        genre = Genre(
+                            id=g["id"],
+                            name=g["name"],
+                            slug=g["slug"],
+                            added_at=datetime.utcnow()
+                        )
+                        db.add(genre)
+                        db.commit()
+                    assoc = db.query(MediaGenre).filter(MediaGenre.media_id == media.id, MediaGenre.genre_id == genre.id).first()
+                    if not assoc:
+                        print(f"Asociando género {g['id']} con media {media.id}")
+                        assoc = MediaGenre(
+                            media_id=media.id,
+                            genre_id=genre.id,
+                            added_at=datetime.utcnow()
+                        )
+                        db.add(assoc)
+                        db.commit()
+            except Exception as e:
+                print(f"Error procesando featured item {item['id']}: {e}")
+                db.rollback()
+                continue
 
-            for g in item.get("genres", []):
-                genre = db.query(Genre).filter(Genre.id == g["id"]).first()
-                if not genre:
-                    genre = Genre(id=g["id"], name=g["name"], slug=g["slug"])
-                    db.add(genre)
-                    db.commit()
-                assoc = db.query(MediaGenre).filter(MediaGenre.media_id == media.id, MediaGenre.genre_id == genre.id).first()
-                if not assoc:
-                    assoc = MediaGenre(media_id=media.id, genre_id=genre.id)
-                    db.add(assoc)
-                    db.commit()
-
+        print("Procesando latestEpisodes...")
         for ep in data.get("latestEpisodes", []):
-            media_data = ep.get("media")
-            media = db.query(Media).filter(Media.id == media_data["id"]).first()
-            if not media:
-                media = Media(id=media_data["id"], slug=media_data["slug"], title=media_data["title"], type="anime")
-                db.add(media)
-                db.commit()
-
-            created_at = datetime.fromisoformat(ep["createdAt"].replace("+00", "Z"))
-            episode = db.query(Episode).filter(Episode.id == ep["id"]).first()
-            if not episode:
-                episode = Episode(
-                    id=ep["id"], media_id=media.id, number=ep["number"],
-                    created_at=created_at, image_url=ep["image_url"], watch_url=ep["watch_url"]
-                )
-                db.add(episode)
-                db.commit()
-
-        for item in data.get("latestMedia", []):
-            cat_data = item.get("category")
-            if cat_data:
-                category = db.query(Category).filter(Category.id == cat_data["id"]).first()
-                if not category:
-                    category = Category(id=cat_data["id"], name=cat_data["name"], slug=cat_data.get("slug"))
-                    db.add(category)
+            try:
+                print(f"Procesando episodio {ep['id']}")
+                media_data = ep.get("media")
+                media = db.query(Media).filter(Media.id == media_data["id"]).first()
+                if not media:
+                    print(f"Creando media {media_data['id']}: {media_data['title']}")
+                    media = Media(
+                        id=media_data["id"],
+                        slug=media_data["slug"],
+                        title=media_data["title"],
+                        type="anime",
+                        added_at=datetime.utcnow()
+                    )
+                    db.add(media)
                     db.commit()
 
-            created_at = datetime.fromisoformat(item["createdAt"].replace("+00", "Z"))
-            media = db.query(Media).filter(Media.id == item["id"]).first()
-            if not media:
-                media = Media(
-                    id=item["id"], slug=item["slug"], title=item["title"], synopsis=item["synopsis"],
-                    image_url=item["image_url"], watch_url=item["watch_url"], created_at=created_at,
-                    poster=item["poster"], type="anime", category_id=cat_data["id"] if cat_data else None
-                )
-                db.add(media)
-                db.commit()
+                created_at = parser.isoparse(ep["createdAt"])
+                episode = db.query(Episode).filter(Episode.id == ep["id"]).first()
+                if not episode:
+                    print(f"Creando episodio {ep['id']} para media {media.id}")
+                    episode = Episode(
+                        id=ep["id"],
+                        media_id=media.id,
+                        number=ep["number"],
+                        created_at=created_at,
+                        image_url=ep["image_url"],
+                        watch_url=ep["watch_url"],
+                        added_at=datetime.utcnow()
+                    )
+                    db.add(episode)
+                    db.commit()
+            except Exception as e:
+                print(f"Error procesando episodio {ep['id']}: {e}")
+                db.rollback()
+                continue
+
+        print("Procesando latestMedia...")
+        for item in data.get("latestMedia", []):
+            try:
+                print(f"Procesando media {item['id']}: {item['title']}")
+                cat_data = item.get("category")
+                if cat_data:
+                    category = db.query(Category).filter(Category.id == cat_data["id"]).first()
+                    if not category:
+                        print(f"Creando categoría {cat_data['id']}: {cat_data['name']}")
+                        category = Category(
+                            id=cat_data["id"],
+                            name=cat_data["name"],
+                            slug=cat_data.get("slug", slugify(cat_data["name"])),  # Generar slug si no se proporciona
+                            added_at=datetime.utcnow()
+                        )
+                        db.add(category)
+                        db.commit()
+
+                created_at = parser.isoparse(item["createdAt"])
+                media = db.query(Media).filter(Media.id == item["id"]).first()
+                if not media:
+                    print(f"Creando media {item['id']}: {item['title']}")
+                    media = Media(
+                        id=item["id"],
+                        slug=item["slug"],
+                        title=item["title"],
+                        synopsis=item["synopsis"],
+                        image_url=item["image_url"],
+                        watch_url=item["watch_url"],
+                        created_at=created_at,
+                        poster=item["poster"],
+                        type="anime",
+                        category_id=cat_data["id"] if cat_data else None,
+                        added_at=datetime.utcnow()
+                    )
+                    db.add(media)
+                    db.commit()
+            except Exception as e:
+                print(f"Error procesando latestMedia item {item['id']}: {e}")
+                db.rollback()
+                continue
+
+        db.commit()
+        print("Todos los datos procesados y guardados correctamente.")
     except Exception as e:
         db.rollback()
-        print(f"Error: {e}")
+        print(f"Error general en save_anime_home: {e}")
+        raise
     finally:
         db.close()
 

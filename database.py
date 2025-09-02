@@ -1,5 +1,4 @@
-# database.py - Configuración y definición de la base de datos en PostgreSQL con Supabase
-from sqlalchemy import create_engine, Column, Integer, String, Date, Text, DateTime, ForeignKey, Boolean, Float, JSON, Enum
+from sqlalchemy import create_engine, Column, Integer, String, Date, Text, DateTime, ForeignKey, Boolean, Float, JSON, Enum, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
@@ -11,7 +10,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Obtener la URL de la base de datos desde las variables de entorno
-# El valor por defecto es solo un placeholder; la contraseña debe estar en .env
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres.azawidatlmzzpbhrrdjv:[YOUR-PASSWORD]@aws-1-us-east-2.pooler.supabase.com:6543/postgres")
 print(f"URL utilizada: {DATABASE_URL}")
 ENGINE = create_engine(DATABASE_URL, echo=True)  # echo=True para logs de debug
@@ -39,17 +37,20 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     slug = Column(String(100), unique=True, nullable=False)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
 
 class Genre(Base):
     __tablename__ = "genres"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     slug = Column(String(100), unique=True, nullable=False)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
 
 class Tag(Base):
     __tablename__ = "tags"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=True)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
 
 class Media(Base):
     __tablename__ = "media"
@@ -82,6 +83,7 @@ class Media(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     day = Column(String(50), nullable=True)
     time = Column(String(50), nullable=True)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
     
     category = relationship("Category")
     genres = relationship("MediaGenre", back_populates="media")
@@ -93,6 +95,7 @@ class MediaGenre(Base):
     id = Column(Integer, primary_key=True, index=True)
     media_id = Column(Integer, ForeignKey("media.id"), nullable=False)
     genre_id = Column(Integer, ForeignKey("genres.id"), nullable=False)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
     media = relationship("Media", back_populates="genres")
 
 class MediaTag(Base):
@@ -100,6 +103,7 @@ class MediaTag(Base):
     id = Column(Integer, primary_key=True, index=True)
     media_id = Column(Integer, ForeignKey("media.id"), nullable=False)
     tag_id = Column(Integer, ForeignKey("tags.id"), nullable=False)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
     media = relationship("Media", back_populates="tags")
 
 class Episode(Base):
@@ -111,6 +115,7 @@ class Episode(Base):
     created_at = Column(DateTime, nullable=True)
     image_url = Column(String(500), nullable=True)
     watch_url = Column(String(500), nullable=True)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
     
     media = relationship("Media", back_populates="episodes")
     embeds = relationship("Embed", back_populates="episode")
@@ -123,6 +128,7 @@ class Embed(Base):
     server = Column(String(100), nullable=False)
     url = Column(String(500), nullable=False)
     variant = Column(String(50), nullable=True)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
     
     episode = relationship("Episode", back_populates="embeds")
 
@@ -133,28 +139,32 @@ class Download(Base):
     server = Column(String(100), nullable=False)
     url = Column(String(500), nullable=False)
     variant = Column(String(50), nullable=True)
+    added_at = Column(DateTime, nullable=True, default=datetime.utcnow)
     
     episode = relationship("Episode", back_populates="downloads")
 
 class FilterOption(Base):
     __tablename__ = "filter_options"
     id = Column(Integer, primary_key=True, index=True)
-    filter_type = Column(String(50), nullable=False)
+    filter_type = Column(String(50), nullable=False, index=True)
     value = Column(String(100), nullable=False)
     is_multiple = Column(Boolean, default=False)
+    added_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint('filter_type', 'value', name='uix_filter_type_value'),
+    )
 
 # Crear tablas al importar el módulo
 Base.metadata.create_all(bind=ENGINE)
 
-# database.py (añadir al final del archivo)
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-        
-# Bloque para ejecución directa
+
 if __name__ == "__main__":
     try:
         Base.metadata.create_all(bind=ENGINE)

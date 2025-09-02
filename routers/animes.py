@@ -10,6 +10,7 @@ from utils.builders import (
 )
 from core.cache import get_cached, set_cache
 from core.config import BASE_URL, VALID_CATEGORIES, VALID_GENRES, VALID_STATUS, VALID_ORDERS, VALID_LETTERS
+from save_functions import save_anime_home
 
 router = APIRouter()
 
@@ -131,7 +132,6 @@ def get_animes(
     pages = [int(plink.text) for plink in pagination_links if plink.text.isdigit()]
     if pages:
         total_pages = max(pages)
-
     return {
         "url": url,
         "page": page,
@@ -141,6 +141,30 @@ def get_animes(
     }
 
 # -------------------- /home --------------------
+def validate_home_data(data):
+    required_keys = ["featured", "latestEpisodes", "latestMedia"]
+    for key in required_keys:
+        if key not in data:
+            raise ValueError(f"Falta la clave '{key}' en los datos de entrada")
+    for item in data["featured"]:
+        if not all(k in item for k in ["id", "slug", "title", "synopsis", "image_url", "watch_url"]):
+            raise ValueError(f"Elemento en 'featured' incompleto: {item}")
+        if item.get("startDate") and not re.match(r"\d{4}-\d{2}-\d{2}", item["startDate"]):
+            raise ValueError(f"Formato de startDate inválido en: {item}")
+        if item.get("status") is not None and item["status"] not in [0, 1, 2]:
+            raise ValueError(f"Valor de status inválido en: {item}")
+    for ep in data["latestEpisodes"]:
+        if not all(k in ep for k in ["id", "media", "number", "createdAt", "image_url", "watch_url"]):
+            raise ValueError(f"Elemento en 'latestEpisodes' incompleto: {ep}")
+        if not re.match(r"\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(\.\d+)?(\+\d{2}(:\d{2})?)?", ep["createdAt"]):
+            raise ValueError(f"Formato de createdAt inválido en: {ep}")
+    for item in data["latestMedia"]:
+        if not all(k in item for k in ["id", "slug", "title", "synopsis", "createdAt", "image_url", "watch_url"]):
+            raise ValueError(f"Elemento en 'latestMedia' incompleto: {item}")
+        if not re.match(r"\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(\.\d+)?(\+\d{2}(:\d{2})?)?", item["createdAt"]):
+            raise ValueError(f"Formato de createdAt inválido en: {item}")
+    return True
+
 @router.get("/home")
 async def get_home_data(force_refresh: bool = Query(False)):
     if not force_refresh:
@@ -182,6 +206,14 @@ async def get_home_data(force_refresh: bool = Query(False)):
                 item["image_url"] = build_latest_media_image_url(anime_id)
                 item["watch_url"] = build_watch_url(slug)
                 result["latestMedia"].append(item)
+
+            # Validar y guardar los datos
+            try:
+                validate_home_data(result)
+                save_anime_home(result)
+            except Exception as e:
+                print(f"Error al guardar en la base de datos: {e}, datos problemáticos: {result}")
+                raise
 
             set_cache("home_data", result)
             return result
