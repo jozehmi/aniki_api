@@ -325,12 +325,28 @@ def save_anime_details(data: dict):
                 db.add(assoc)
 
         # Procesar episodios
+        # In save_functions.py, update the episode processing loop in save_anime_details
+        # Procesar episodios
         for ep in data.get("episodes", []):
-            episode = db.query(Episode).filter(Episode.media_id == media.id, Episode.number == ep["number"]).first()
+            ep_id = ep.get("id")  # Use real ID if available
+            if ep_id:
+                episode = db.query(Episode).filter(Episode.id == ep_id).first()
+            else:
+                episode = db.query(Episode).filter(Episode.media_id == media.id, Episode.number == ep["number"]).first()
             if not episode:
-                episode = Episode(media_id=media.id, number=ep["number"], image_url=ep.get("image"), watch_url=ep.get("url"))
+                episode = Episode(
+                    id=ep_id,  # Set ID if present
+                    media_id=media.id,
+                    number=ep["number"],
+                    image_url=ep.get("image"),
+                    watch_url=ep.get("url"),
+                    added_at=datetime.utcnow()
+                )
                 db.add(episode)
-
+            else:
+                # Update if exists
+                episode.image_url = ep.get("image") or episode.image_url
+                episode.watch_url = ep.get("url") or episode.watch_url
         db.commit()
     except Exception as e:
         db.rollback()
@@ -339,6 +355,7 @@ def save_anime_details(data: dict):
         db.close()
 
 
+# Función para guardar Anime Episode
 # Función para guardar Anime Episode
 def save_anime_episode(data: dict):
     status_map = {
@@ -382,11 +399,31 @@ def save_anime_episode(data: dict):
                     db.add(assoc)
 
         ep_data = data.get("episode")
+
+        # Modificación: Lógica para manejar placeholders y evitar duplicados
         episode = db.query(Episode).filter(Episode.id == ep_data["id"]).first()
         if not episode:
-            episode = Episode(id=ep_data["id"], media_id=media.id, number=ep_data["number"], filler=ep_data["filler"])
+            episode_by_key = db.query(Episode).filter(Episode.media_id == media.id, Episode.number == ep_data["number"]).first()
+            image_url = None
+            watch_url = None
+            if episode_by_key:
+                if episode_by_key.id < 100000:  # Umbral para detectar placeholders (ajusta si es necesario)
+                    image_url = episode_by_key.image_url
+                    watch_url = episode_by_key.watch_url
+                    db.delete(episode_by_key)
+                    db.commit()
+            episode = Episode(
+                id=ep_data["id"],
+                media_id=media.id,
+                number=ep_data["number"],
+                filler=ep_data["filler"],
+                image_url=image_url,
+                watch_url=watch_url,
+                added_at=datetime.utcnow()
+            )
             db.add(episode)
         else:
+            # Si ya existe por ID real, actualiza campos si es necesario
             episode.filler = ep_data["filler"]
 
         for emb in data.get("embeds", []):
