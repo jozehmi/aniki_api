@@ -3,7 +3,7 @@ from datetime import datetime
 from core.config import VALID_CATEGORIES, VALID_GENRES, VALID_STATUS, VALID_ORDERS, VALID_LETTERS
 from sqlalchemy.orm import Session
 from database import get_db
-from save_functions import save_filters
+from save_anime_functions import save_filters
 
 router = APIRouter()
 

@@ -10,7 +10,7 @@ from utils.builders import (
 )
 from core.cache import get_cached, set_cache
 from core.config import BASE_URL, VALID_CATEGORIES, VALID_GENRES, VALID_STATUS, VALID_ORDERS, VALID_LETTERS
-from save_functions import save_anime_home,save_anime_catalog,save_anime_details,save_anime_episode
+from save_anime_functions import save_anime_home,save_anime_catalog,save_anime_details,save_anime_episode
 
 router = APIRouter()
 

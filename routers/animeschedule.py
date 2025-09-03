@@ -8,7 +8,7 @@ import asyncio, re, json
 from core.cache import get_cached, set_cache
 from core.config import BASE_URL
 from utils.scraping import fetch_html
-from save_functions import save_anime_schedule
+from save_anime_functions import save_anime_schedule
 
 router = APIRouter()
 
