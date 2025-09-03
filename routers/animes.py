@@ -10,7 +10,7 @@ from utils.builders import (
 )
 from core.cache import get_cached, set_cache
 from core.config import BASE_URL, VALID_CATEGORIES, VALID_GENRES, VALID_STATUS, VALID_ORDERS, VALID_LETTERS
-from save_functions import save_anime_home,save_anime_catalog,save_anime_details
+from save_functions import save_anime_home,save_anime_catalog,save_anime_details,save_anime_episode
 
 router = APIRouter()
 
@@ -282,19 +282,16 @@ async def get_episode(slug: str, number: int, force_refresh: bool = Query(False)
         cached = get_cached(cache_key)
         if cached:
             return cached
-
     url = f"{BASE_URL}/media/{slug}/{number}"
     html = await fetch_html(url)
     soup = BeautifulSoup(html, "html.parser")
     script_text = find_sveltekit_script(soup)
     if not script_text:
         raise HTTPException(status_code=500, detail="No se encontró bloque de datos")
-
     try:
         m = re.search(r"data\s*:\s*\[", script_text)
         if not m:
             raise HTTPException(status_code=500, detail="No se encontró 'data:[' en el script")
-
         start = script_text.find("[", m.start())
         depth, end = 0, None
         for i in range(start, len(script_text)):
@@ -308,14 +305,11 @@ async def get_episode(slug: str, number: int, force_refresh: bool = Query(False)
                     break
         if end is None:
             raise HTTPException(status_code=500, detail="No se cerró el array de 'data'")
-
         data_js = script_text[start:end + 1]
         data_json = re.sub(r'([{\[,]\s*)([A-Za-z0-9_@$-]+)\s*:', r'\1"\2":', data_js)
         data_json = data_json.replace("undefined", "null").replace("void 0", "null")
         data_json = re.sub(r',\s*(\]|})', r'\1', data_json)
-
         data = json.loads(data_json)
-
         media_block = None
         ep_block = None
         for item in data:
@@ -325,7 +319,6 @@ async def get_episode(slug: str, number: int, force_refresh: bool = Query(False)
                     media_block = dd["media"]
                 if ep_block is None and "episode" in dd:
                     ep_block = dd
-
         if not media_block or not ep_block:
             raise HTTPException(status_code=500, detail="No se encontraron bloques 'media' o 'episode'")
 
@@ -370,10 +363,16 @@ async def get_episode(slug: str, number: int, force_refresh: bool = Query(False)
             "downloads": downloads,
         }
 
+        # Guardar los datos en la base
+        try:
+            save_anime_episode(result)
+        except Exception as e:
+            print(f"Error al guardar episodio en BD: {e}")
+
         set_cache(cache_key, result)
         return result
-
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al parsear episodio: {e}")
+

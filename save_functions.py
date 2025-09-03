@@ -341,25 +341,37 @@ def save_anime_details(data: dict):
 
 # Función para guardar Anime Episode
 def save_anime_episode(data: dict):
+    status_map = {
+        1: "emision",
+        2: "finalizado",
+        3: "proximamente"
+    }
     db = next(get_db())
     try:
         anime_data = data.get("anime")
+        status_val = anime_data.get("status")
+        status_str = None
+        if status_val is not None:
+            if isinstance(status_val, int):
+                status_str = status_map.get(status_val)
+            elif isinstance(status_val, str):
+                status_str = status_val
+        status_enum = MediaStatus(status_str) if status_str else None
+
         media = db.query(Media).filter(Media.id == anime_data["id"]).first()
         if not media:
             media = Media(
-                id=anime_data["id"], title=anime_data["title"], aka=anime_data["aka"], score=anime_data["score"],
-                votes=anime_data["votes"], mal_id=anime_data["malId"], status=MediaStatus(anime_data["status"]) if anime_data.get("status") else None,
-                episodes_count=anime_data["episodes_count"], type="anime"
+                id=anime_data["id"], title=anime_data["title"], aka=anime_data.get("aka"),
+                score=anime_data.get("score"), votes=anime_data.get("votes"), mal_id=anime_data.get("malId"),
+                status=status_enum, episodes_count=anime_data.get("episodes_count"), type="anime"
             )
             db.add(media)
-            db.commit()
         else:
-            media.score = anime_data["score"] or media.score
-            media.votes = anime_data["votes"] or media.votes
-            media.mal_id = anime_data["malId"] or media.mal_id
-            media.status = MediaStatus(anime_data["status"]) if anime_data.get("status") else media.status
-            media.episodes_count = anime_data["episodes_count"] or media.episodes_count
-            db.commit()
+            media.score = anime_data.get("score", media.score)
+            media.votes = anime_data.get("votes", media.votes)
+            media.mal_id = anime_data.get("malId", media.mal_id)
+            media.status = status_enum or media.status
+            media.episodes_count = anime_data.get("episodes_count", media.episodes_count)
 
         for genre_name in anime_data.get("genres", []):
             genre = db.query(Genre).filter(Genre.name == genre_name).first()
@@ -368,31 +380,28 @@ def save_anime_episode(data: dict):
                 if not assoc:
                     assoc = MediaGenre(media_id=media.id, genre_id=genre.id)
                     db.add(assoc)
-                    db.commit()
 
         ep_data = data.get("episode")
         episode = db.query(Episode).filter(Episode.id == ep_data["id"]).first()
         if not episode:
             episode = Episode(id=ep_data["id"], media_id=media.id, number=ep_data["number"], filler=ep_data["filler"])
             db.add(episode)
-            db.commit()
         else:
             episode.filler = ep_data["filler"]
-            db.commit()
 
         for emb in data.get("embeds", []):
             embed = db.query(Embed).filter(Embed.episode_id == episode.id, Embed.server == emb["server"], Embed.url == emb["url"]).first()
             if not embed:
                 embed = Embed(episode_id=episode.id, server=emb["server"], url=emb["url"], variant=emb["variant"])
                 db.add(embed)
-                db.commit()
 
         for dl in data.get("downloads", []):
             download = db.query(Download).filter(Download.episode_id == episode.id, Download.server == dl["server"], Download.url == dl["url"]).first()
             if not download:
                 download = Download(episode_id=episode.id, server=dl["server"], url=dl["url"], variant=dl["variant"])
                 db.add(download)
-                db.commit()
+
+        db.commit()
     except Exception as e:
         db.rollback()
         print(f"Error: {e}")
