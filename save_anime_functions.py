@@ -1,5 +1,5 @@
 from sqlalchemy.exc import IntegrityError
-from database import FilterOption, SessionLocal, Genre, Tag, Media, MediaGenre, MediaTag, ContentUnit, Embed, Download, MediaStatus, MediaType, get_db
+from database import FilterOption, Genre, Media, ContentUnit, Embed, Download, MediaStatus, MediaType, get_db
 from datetime import datetime
 from dateutil import parser
 from slugify import slugify

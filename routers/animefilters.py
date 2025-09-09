@@ -24,6 +24,6 @@ def get_filters(db: Session = Depends(get_db)):
     }
 
     # Guardar los filtros en la base de datos
-    save_filters(filters_data, db)
+    #save_filters(filters_data, db)
 
     return filters_data
