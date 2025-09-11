@@ -312,6 +312,20 @@ class AnimeHomeLatestMedia(Base):
     created_at = Column(DateTime(timezone=True)) # No default aquí
 
     section = relationship("AnimeHomeSection")
+    
+# --- TABLA PARA CATÁLOGO DE ANIME ---
+class AnimeCatalog(Base):
+    __tablename__ = "anime_catalog"
+    id = Column(Integer, primary_key=True)
+    anime_id = Column(Integer, ForeignKey("anime.id"), nullable=False)
+    section_id = Column(Integer, ForeignKey("anime_home_sections.id"), nullable=False)
+    position = Column(Integer)  # Para ordenar si es necesario
+    created_at = Column(DateTime(timezone=True), nullable=False)
+
+    anime = relationship("Anime")
+    section = relationship("AnimeHomeSection")
+
+    __table_args__ = (UniqueConstraint("anime_id", "section_id", name="uq_anime_catalog"),)
 
 
 # --- TABLAS PARA SECCIONES HOME (MANGA) ---
@@ -501,6 +515,7 @@ if __name__ == "__main__":
                 AnimeHomeSection(id=1, name="featured"),
                 AnimeHomeSection(id=2, name="latestEpisodes"),
                 AnimeHomeSection(id=3, name="latestMedia"),
+                AnimeHomeSection(id=4, name="catalog")
             ]
             session.add_all(anime_home_sections)
 
