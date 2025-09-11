@@ -1,5 +1,4 @@
 from sqlalchemy.exc import IntegrityError
-from aniki import AnimeFilterOption as FilterOption, Genre, Anime as Media, Episode, Embed, Download, AnimeStatusEnum as MediaStatus, Category as MediaType, get_db, AnimeHomeFeatured, AnimeHomeLatestEpisode, AnimeHomeLatestMedia, MediaTypeEnum
 from datetime import datetime
 from dateutil import parser
 from slugify import slugify
