@@ -1,0 +1,722 @@
+DATOS MANGAS
+
+Manga home
+
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/mangas/home?force_refresh=false' \
+  -H 'accept: application/json'
+
+  {
+  "populares": {
+    "general": {
+      "count": 12,
+      "items": [
+        {
+          "title": "Dandadan",
+          "url": "https://zonatmo.com/library/manga/3900/dandadan",
+          "score": "9.23",
+          "cover": "https://otakuteca.com/images/books/cover/614cdc1808414.webp",
+          "type": "manga",
+          "demography": "Shounen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "ATM ojisan isekai de moteki ga tomaranai!",
+          "url": "https://zonatmo.com/library/manga/90161/atmojisanisekaidemotekigatomaranai",
+          "score": "0.00",
+          "cover": "https://otakuteca.com/images/books/cover/68bdb9ec1d2c1.webp",
+          "type": "manga",
+          "demography": "Shounen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "Ane no tomodachi ",
+          "url": "https://zonatmo.com/library/manga/82009/laamigademihermana",
+          "score": "8.33",
+          "cover": "https://otakuteca.com/images/books/cover/67bfd9f498224.webp",
+          "type": "manga",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        }
+      ]
+    },
+    "seinen": {
+      "count": 12,
+      "items": [
+        {
+          "title": "Soy la villana, ¡Pero por favor hazme tu esclava sexual!",
+          "url": "https://zonatmo.com/library/manga/80285/soylavillanaperoporfavorhazmetuesclavasexual",
+          "score": "9.00",
+          "cover": "https://otakuteca.com/images/books/cover/653932f784c9b.webp",
+          "type": "manga",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "La Azotea Secreta de Kim",
+          "url": "https://zonatmo.com/library/manhwa/87759/laazoteasecretadekim",
+          "score": "10.00",
+          "cover": "https://otakuteca.com/images/books/cover/679cc3dd204ff.webp",
+          "type": "manhwa",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "¡No se lo cuentes a nadie!",
+          "url": "https://zonatmo.com/library/manhwa/86779/noselocuentesanadie",
+          "score": "9.00",
+          "cover": "https://otakuteca.com/images/books/cover/673742fdacf5c.webp",
+          "type": "manhwa",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        }
+      ]
+    },
+    "josei": {
+      "count": 12,
+      "items": [
+        {
+          "title": "Neighbor Guild Member",
+          "url": "https://zonatmo.com/library/manhwa/78254/miembrodelgremiodevecinos",
+          "score": "9.58",
+          "cover": "https://otakuteca.com/images/books/cover/64a7147d5c8d0.webp",
+          "type": "manhwa",
+          "demography": "Josei",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "Lo que pasa cuando el conductor suplente está soltero",
+          "url": "https://zonatmo.com/library/manhwa/90119/loquepasacuandoelconductorsuplenteestasoltero",
+          "score": "0.00",
+          "cover": "https://otakuteca.com/images/books/cover/68b934f306c4a.webp",
+          "type": "manhwa",
+          "demography": "Josei",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "Stigma ",
+          "url": "https://zonatmo.com/library/manhwa/80708/estigma",
+          "score": "8.57",
+          "cover": "https://otakuteca.com/images/books/cover/65629a21f18fe.webp",
+          "type": "manhwa",
+          "demography": "Josei",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        }
+      ]
+    }
+  },
+  "trending": {
+    "general": {
+      "count": 12,
+      "items": [
+        {
+          "title": "Dandadan",
+          "url": "https://zonatmo.com/library/manga/3900/dandadan",
+          "score": "9.23",
+          "cover": "https://otakuteca.com/images/books/cover/614cdc1808414.webp",
+          "type": "manga",
+          "demography": "Shounen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "¡Mi esposa del país vecino es tan linda que no sé qué hacer!",
+          "url": "https://zonatmo.com/library/manga/89955/miesposadelpaisvecinoestanlindaquenosequehacer",
+          "score": "9.00",
+          "cover": "https://otakuteca.com/images/books/cover/68a642f9455e1.webp",
+          "type": "manga",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "El amor de Nanase es anormal",
+          "url": "https://zonatmo.com/library/manga/86293/nanasesannokoigaijou",
+          "score": "10.00",
+          "cover": "https://otakuteca.com/images/books/cover/670718c2f228c.webp",
+          "type": "manga",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        }
+      ]
+    },
+    "seinen": {
+      "count": 12,
+      "items": [
+        {
+          "title": "Soy la villana, ¡Pero por favor hazme tu esclava sexual!",
+          "url": "https://zonatmo.com/library/manga/80285/soylavillanaperoporfavorhazmetuesclavasexual",
+          "score": "9.00",
+          "cover": "https://otakuteca.com/images/books/cover/653932f784c9b.webp",
+          "type": "manga",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "La Azotea Secreta de Kim",
+          "url": "https://zonatmo.com/library/manhwa/87759/laazoteasecretadekim",
+          "score": "10.00",
+          "cover": "https://otakuteca.com/images/books/cover/679cc3dd204ff.webp",
+          "type": "manhwa",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "¡No se lo cuentes a nadie!",
+          "url": "https://zonatmo.com/library/manhwa/86779/noselocuentesanadie",
+          "score": "9.00",
+          "cover": "https://otakuteca.com/images/books/cover/673742fdacf5c.webp",
+          "type": "manhwa",
+          "demography": "Seinen",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        }
+      ]
+    },
+    "josei": {
+      "count": 12,
+      "items": [
+        {
+          "title": "Neighbor Guild Member",
+          "url": "https://zonatmo.com/library/manhwa/78254/miembrodelgremiodevecinos",
+          "score": "9.58",
+          "cover": "https://otakuteca.com/images/books/cover/64a7147d5c8d0.webp",
+          "type": "manhwa",
+          "demography": "Josei",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "Lo que pasa cuando el conductor suplente está soltero",
+          "url": "https://zonatmo.com/library/manhwa/90119/loquepasacuandoelconductorsuplenteestasoltero",
+          "score": "0.00",
+          "cover": "https://otakuteca.com/images/books/cover/68b934f306c4a.webp",
+          "type": "manhwa",
+          "demography": "Josei",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        },
+        {
+          "title": "Stigma ",
+          "url": "https://zonatmo.com/library/manhwa/80708/estigma",
+          "score": "8.57",
+          "cover": "https://otakuteca.com/images/books/cover/65629a21f18fe.webp",
+          "type": "manhwa",
+          "demography": "Josei",
+          "upload_time": null,
+          "popularity": null,
+          "chapter": null
+        }
+      ]
+    }
+  },
+  "ultimos_anadidos": {
+    "count": 12,
+    "items": [
+      {
+        "title": "#Gyaru to Gyaru no Yuri",
+        "url": "https://zonatmo.com/library/manga/90167/gyarutogyarunoyuri",
+        "score": "0.00",
+        "cover": "https://otakuteca.com/images/books/cover/68bf234c2cb6f.webp",
+        "type": "manga",
+        "demography": "Shounen",
+        "upload_time": null,
+        "popularity": null,
+        "chapter": null
+      },
+      {
+        "title": "ATM ojisan isekai de moteki ga tomaranai!",
+        "url": "https://zonatmo.com/library/manga/90161/atmojisanisekaidemotekigatomaranai",
+        "score": "0.00",
+        "cover": "https://otakuteca.com/images/books/cover/68bdb9ec1d2c1.webp",
+        "type": "manga",
+        "demography": "Shounen",
+        "upload_time": null,
+        "popularity": null,
+        "chapter": null
+      },
+      {
+        "title": "Houkago Instant XXX",
+        "url": "https://zonatmo.com/library/manga/90160/houkagoinstantxxx",
+        "score": "0.00",
+        "cover": "https://otakuteca.com/images/books/cover/68bdaca86721c.webp",
+        "type": "manga",
+        "demography": "Seinen",
+        "upload_time": null,
+        "popularity": null,
+        "chapter": null
+      }
+    ]
+  },
+  "ultimas_subidas": {
+    "count": 90,
+    "items": [
+      {
+        "title": "Tensei Shitara Dragon No Tamago Datta - Saikyou Igai Mezasa Nee",
+        "url": "https://zonatmo.com/library/manga/37338/tensei-shitara-dragon-no-tamago-datta-saikyou-igai-mezasa-nee",
+        "score": null,
+        "cover": "https://otakuteca.com/images/books/cover/607c6c02239fa.webp",
+        "type": "manga",
+        "demography": null,
+        "upload_time": "0 h",
+        "popularity": 0,
+        "chapter": 43
+      },
+      {
+        "title": "Tensei Shitara Dragon No Tamago Datta - Saikyou Igai Mezasa Nee",
+        "url": "https://zonatmo.com/library/manga/37338/tensei-shitara-dragon-no-tamago-datta-saikyou-igai-mezasa-nee",
+        "score": null,
+        "cover": "https://otakuteca.com/images/books/cover/607c6c02239fa.webp",
+        "type": "manga",
+        "demography": null,
+        "upload_time": "0 h",
+        "popularity": 0,
+        "chapter": 43
+      },
+      {
+        "title": "Tensei Shitara Dragon No Tamago Datta - Saikyou Igai Mezasa Nee",
+        "url": null,
+        "score": null,
+        "cover": "https://otakuteca.com/images/books/cover/607c6c02239fa.webp",
+        "type": "manga",
+        "demography": null,
+        "upload_time": "0 h",
+        "popularity": 0,
+        "chapter": 43
+      }
+    ]
+  },
+  "top_semanal": {
+    "count": 10,
+    "items": [
+      {
+        "position": 1,
+        "title": "MANGAChainsaw Man",
+        "url": "https://zonatmo.com/library/manga/336/chainsawman",
+        "type": "manga"
+      },
+      {
+        "position": 2,
+        "title": "MANGAMairimashita! Iruma-kun",
+        "url": "https://zonatmo.com/library/manga/27892/mairimashitairumakun",
+        "type": "manga"
+      },
+      {
+        "position": 3,
+        "title": "MANGAJujutsu Kaisen Módulo",
+        "url": "https://zonatmo.com/library/manga/90149/jujutsukaisenmodulo",
+        "type": "manga"
+      }
+    ]
+  },
+  "top_mensual": {
+    "count": 10,
+    "items": [
+      {
+        "position": 1,
+        "title": "MANHWAJinx",
+        "url": "https://zonatmo.com/library/manhwa/73998/jinx",
+        "type": "manhwa"
+      },
+      {
+        "position": 2,
+        "title": "MANGADandadan",
+        "url": "https://zonatmo.com/library/manga/3900/dandadan",
+        "type": "manga"
+      },
+      {
+        "position": 3,
+        "title": "MANGAOne Punch-Man",
+        "url": "https://zonatmo.com/library/manga/2985/onepunchman",
+        "type": "manga"
+      }
+    ]
+  }
+}
+
+Manga url slug (detalles)
+
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/mangas/detalle?url=https%3A%2F%2Fzonatmo.com%2Flibrary%2Fmanga%2F73041%2Fgokonniittaraonnagainakattahanashi&force_refresh=false' \
+  -H 'accept: application/json'
+
+  {
+  "title": "La historia de cuando fui a una salida grupal y no había chicas( 2020\n                                        )",
+  "subtitle": "Gōkon ni ittara onna ga inakatta hanashi",
+  "description": "*Es un romance hetero \n[Espera, espera, ¿¡por qué hay chicos guapos en una salida grupal!?]\nEl estudiante universitario Tokiwa es invitado por Suō(Suoh), que está en el mismo seminario de la universidad, para unirse a una salida grupal de 3 contra 3. Y el día de la reunión, cuando van al bar donde se suponía que se encontrarían con las chicas, había un grupo de chicos guapos esperándolos...",
+  "cover": "https://otakuteca.com/images/books/cover/67b74b9f7cefb.webp",
+  "type": "manga",
+  "demography": "Shoujo",
+  "state": "Publicándose",
+  "genres": [
+    "Comedia",
+    "Romance",
+    "Género Bender",
+    "Recuentos de la vida"
+  ],
+  "alt_titles": [
+    "goukon ni ittara onna ga inakatta hanashi",
+    "La historia de cuando fui a una salida grupal y no había chicas"
+  ],
+  "synonyms": [
+    "La historia de cuando fui a una salida grupal y no había chicas"
+  ],
+  "chapters": [
+    {
+      "title": "Capítulo 3.00",
+      "url": "https://zonatmo.com/view_uploads/1113360",
+      "date": "2022-10-24",
+      "group": "YgazakiMeronBL"
+    },
+    {
+      "title": null,
+      "url": "https://zonatmo.com/view_uploads/1113360",
+      "date": "2022-10-24",
+      "group": "YgazakiMeronBL"
+    },
+    {
+      "title": "Capítulo 2.50",
+      "url": "https://zonatmo.com/view_uploads/1529929",
+      "date": "2024-10-13",
+      "group": "YgazakiMeronBL"
+    },
+    {
+      "title": null,
+      "url": "https://zonatmo.com/view_uploads/1529929",
+      "date": "2024-10-13",
+      "group": "YgazakiMeronBL"
+    },
+    {
+      "title": "Capítulo 2.00",
+      "url": "https://zonatmo.com/view_uploads/1113282",
+      "date": "2022-10-21",
+      "group": "YgazakiMeronBL"
+    },
+    {
+      "title": null,
+      "url": "https://zonatmo.com/view_uploads/1113282",
+      "date": "2022-10-21",
+      "group": "YgazakiMeronBL"
+    },
+    {
+      "title": "Capítulo 1.00",
+      "url": "https://zonatmo.com/view_uploads/1113278",
+      "date": "2022-10-21",
+      "group": "YgazakiMeronBL"
+    },
+    {
+      "title": null,
+      "url": "https://zonatmo.com/view_uploads/1113278",
+      "date": "2022-10-21",
+      "group": "YgazakiMeronBL"
+    }
+  ],
+  "source_url": "https://zonatmo.com/library/manga/73041/gokonniittaraonnagainakattahanashi"
+}
+
+resolve chapter of manga 
+
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/mangas/resolve_chapter?upload_url=https%3A%2F%2Fzonatmo.com%2Fview_uploads%2F1644409&force_refresh=false' \
+  -H 'accept: application/json'
+
+  {
+  "final_url": "https://zonatmo.com/viewer/ad7c72e01ddf80e081fe15fa854559ea/paginated"
+}
+
+Manga search
+
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/mangas/search?page=1&filter_by=title' \
+  -H 'accept: application/json'
+
+  {
+  "url": "https://zonatmo.com/library?order_item=likes_count&order_dir=desc&title=&_pg=1&filter_by=title&type=&demography=&status=&translation_status=&webcomic=&yonkoma=&amateur=&erotic=",
+  "results": [
+    {
+      "title": "Pintor Nocturno",
+      "score": 9.67,
+      "type": "MANHWA",
+      "demography": "Josei",
+      "url": "https://zonatmo.com/library/manhwa/44644/pintor-nocturno",
+      "image_url": "https://otakuteca.com/images/books/cover/5d01aecc61f68.webp",
+      "is_erotic": true
+    },
+    {
+      "title": "Solo Leveling",
+      "score": 9.01,
+      "type": "MANHWA",
+      "demography": "Shounen",
+      "url": "https://zonatmo.com/library/manhwa/217/solo-leveling",
+      "image_url": "https://otakuteca.com/images/books/cover/5c2efcd42cd5e.webp",
+      "is_erotic": false
+    },
+    {
+      "title": "BJ Alex",
+      "score": 9.06,
+      "type": "MANHWA",
+      "demography": "Josei",
+      "url": "https://zonatmo.com/library/manhwa/34418/bj-alex",
+      "image_url": "https://otakuteca.com/images/books/cover/34418_TMOManga5a551402963b8.webp",
+      "is_erotic": true
+    }
+  ]
+}
+
+Manga filtros estáticos 
+
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/mangas/filters' \
+  -H 'accept: application/json'
+
+  {
+  "filters": {
+    "title": {
+      "description": "Búsqueda por título (texto libre)",
+      "type": "string",
+      "example": "Solo Leveling"
+    },
+    "order_item": {
+      "description": "Criterio de ordenación",
+      "type": "string",
+      "values": [
+        "likes_count",
+        "title",
+        "score",
+        "created_at",
+        "released_at",
+        "chapters_count"
+      ],
+      "default": "likes_count"
+    },
+    "order_dir": {
+      "description": "Dirección de ordenación",
+      "type": "string",
+      "values": [
+        "asc",
+        "desc"
+      ],
+      "default": "desc"
+    },
+    "type": {
+      "description": "Tipo de contenido",
+      "type": "string",
+      "values": [
+        "manga",
+        "manhua",
+        "manhwa",
+        "novel",
+        "one_shot",
+        "doujinshi",
+        "oel"
+      ]
+    },
+    "demography": {
+      "description": "Demografía",
+      "type": "string",
+      "values": [
+        "seinen",
+        "shoujo",
+        "shounen",
+        "josei",
+        "kodomo"
+      ]
+    },
+    "status": {
+      "description": "Estado de publicación",
+      "type": "string",
+      "values": [
+        "publishing",
+        "finished",
+        "canceled",
+        "paused"
+      ]
+    },
+    "translation_status": {
+      "description": "Estado de traducción",
+      "type": "string",
+      "values": [
+        "active",
+        "finished",
+        "abandoned"
+      ]
+    },
+    "webcomic": {
+      "description": "Filtrar por webcomic",
+      "type": "string",
+      "values": [
+        "yes",
+        "no"
+      ]
+    },
+    "yonkoma": {
+      "description": "Filtrar por yonkoma",
+      "type": "string",
+      "values": [
+        "yes",
+        "no"
+      ]
+    },
+    "amateur": {
+      "description": "Filtrar por contenido amateur",
+      "type": "string",
+      "values": [
+        "yes",
+        "no"
+      ]
+    },
+    "erotic": {
+      "description": "Filtrar por contenido erótico",
+      "type": "string",
+      "values": [
+        "yes",
+        "no"
+      ]
+    },
+    "genres": {
+      "description": "Géneros a incluir (múltiples valores permitidos)",
+      "type": "list",
+      "values": [
+        "action",
+        "adventure",
+        "comedy",
+        "drama",
+        "slice_of_life",
+        "ecchi",
+        "fantasy",
+        "magic",
+        "supernatural",
+        "horror",
+        "mystery",
+        "psychological",
+        "romance",
+        "sci_fi",
+        "thriller",
+        "sports",
+        "girls_love",
+        "boys_love",
+        "harem",
+        "mecha",
+        "survival",
+        "reincarnation",
+        "gore",
+        "apocalyptic",
+        "tragedy",
+        "school_life",
+        "history",
+        "military",
+        "police",
+        "crime",
+        "super_powers",
+        "vampires",
+        "martial_arts",
+        "samurai",
+        "gender_bender",
+        "virtual_reality",
+        "cyberpunk",
+        "music",
+        "parody",
+        "animation",
+        "demons",
+        "family",
+        "foreign",
+        "kids",
+        "reality",
+        "soap_opera",
+        "war",
+        "western",
+        "traps"
+      ]
+    },
+    "exclude_genres": {
+      "description": "Géneros a excluir (múltiples valores permitidos)",
+      "type": "list",
+      "values": [
+        "action",
+        "adventure",
+        "comedy",
+        "drama",
+        "slice_of_life",
+        "ecchi",
+        "fantasy",
+        "magic",
+        "supernatural",
+        "horror",
+        "mystery",
+        "psychological",
+        "romance",
+        "sci_fi",
+        "thriller",
+        "sports",
+        "girls_love",
+        "boys_love",
+        "harem",
+        "mecha",
+        "survival",
+        "reincarnation",
+        "gore",
+        "apocalyptic",
+        "tragedy",
+        "school_life",
+        "history",
+        "military",
+        "police",
+        "crime",
+        "super_powers",
+        "vampires",
+        "martial_arts",
+        "samurai",
+        "gender_bender",
+        "virtual_reality",
+        "cyberpunk",
+        "music",
+        "parody",
+        "animation",
+        "demons",
+        "family",
+        "foreign",
+        "kids",
+        "reality",
+        "soap_opera",
+        "war",
+        "western",
+        "traps"
+      ]
+    },
+    "page": {
+      "description": "Número de página para paginación",
+      "type": "integer",
+      "default": 1,
+      "minimum": 1
+    }
+  }
+}

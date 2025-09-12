@@ -8,7 +8,7 @@ from typing import Optional, List, Dict, Any
 
 from core.cache import get_cached, set_cache  # tu caché síncrona
 from core.config import ZONATMO_BASE_URL, ZONATMO_HEADERS
-
+from save_manga_functions import save_manga_home
 router = APIRouter()
 
 BASE_URL = ZONATMO_BASE_URL
@@ -426,7 +426,7 @@ async def home(
         "top_mensual": {"count": len(top_mensual), "items": top_mensual},
     }
 
-    return result
+    save_manga_home(result)
     
 
     return result
