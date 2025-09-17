@@ -1,2 +1,2 @@
 # routers/__init__.py
-from . import animes, animeschedule
+from . import animehome, animecatalog, animedetails, animeepisode, animeschedule
